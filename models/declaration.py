@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, DateTime, Numeric, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, Numeric, ForeignKey
 
 from models.data_vault import Hub, Sat
 from models.dict import DictAgency
@@ -33,6 +33,8 @@ class SatDeclaration(Base, Sat):
     income_month_const_ребенок = Column(Numeric)
     extra = Column(String)
     coef = Column(Numeric)
+    state_agency_short = Column(String)
+    year = Column(Integer)
 
     valid_from = Column(DateTime)
     valid_to = Column(DateTime)

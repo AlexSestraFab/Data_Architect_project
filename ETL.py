@@ -102,10 +102,9 @@ def transform():
     for link_task in link_tasks:
         Link.prepare_links(*link_task)
 
-def show_created_files():
-    print("\n" + "="*50)
-    print("СОЗДАННЫЕ ФАЙЛЫ:")
+def check_csv_files():
     print("="*50)
+    print("СОЗДАННЫЕ ФАЙЛЫ:")
 
     for folder in ["hubs", "sats", "links", "data"]:
         path = f"stage/{folder}/"
@@ -116,39 +115,65 @@ def show_created_files():
                 print(f"  - {f}")
         else:
             print(f"\n{folder.upper()}: папка не существует")
-
-    print("\n" + "="*50)
+    print("="*50)
 
 def load():
-    engine = create_engine("sqlite:///test_declarations.db")
+    #engine = create_engine("postgresql://postgres:postgres@localhost:5432/declaration_db")
+
+    print("Загрузка в PostgreSQL")
+    print("\n" + "="*50)
+
+    print("Загрузка в PostgreSQL")
 
     hub_path = "stage/hubs/"
     for filename in os.listdir(hub_path):
         df = pd.read_csv(hub_path + filename)
         table = filename.replace('.csv', '')
-        df.to_sql(table, con=engine, if_exists='append', index=False)
+        df.to_sql(table, con=engine, if_exists='replace', index=False)
+        print(f" Загружен хаб: {table} ({len(df)} записей)")
 
     link_path = "stage/links/"
     for filename in os.listdir(link_path):
         df = pd.read_csv(link_path + filename)
         table = filename.replace('.csv', '')
-        df.to_sql(table, con=engine, if_exists='append', index=False)
+        df.to_sql(table, con=engine, if_exists='replace', index=False)
+        print(f" Загружен линк: {table} ({len(df)} записей)")
 
     sat_path = "stage/sats/"
     for filename in os.listdir(sat_path):
         df = pd.read_csv(sat_path + filename)
         table = filename.replace('.csv', '')
-        df.to_sql(table, con=engine, if_exists='append', index=False)
+        df.to_sql(table, con=engine, if_exists='replace', index=False)
+        print(f" Загружен сателлит: {table} ({len(df)} записей)")
 
-        with engine.connect() as conn:
-            result = conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
-            tables = [row[0] for row in result]
-        
-            print(f"Создано таблиц: {len(tables)}")
-        print("Таблицы:", ", ".join(sorted(tables)))
+        print("\n Все данные загружены в PostgreSQL")
+        print("="*50)
+        return engine
 
-        print("Данные успешно загружены в SQLite базу test_declarations.db")
+def create_dashboard_view(engine):
+    try:
+        with open('sql/dashboard_view.sql', 'r', encoding='utf-8') as f:  # чтение SQL-скрипта из файла
+            sql_script = f.read()
 
-transform()
-load()
-show_created_files()
+        with engine.connect() as conn: # создание соединения через sqlalchemy
+            from sqlalchemy import text
+
+            conn.execute(text("DROP VIEW IF EXISTS dm_dashboard_main CASCADE"))
+            conn.execute(text(sql_script))
+            conn.commit()
+
+            print(f"VIEW dm_dashboard_main успешно создан")
+
+            result = conn.execute(text("SELECT COUNT(*) FROM dm_dashboard_main"))
+            count = result.fetchone()[0]
+            print(f"В VIEW содержится {count} записей")
+
+    except Exception as e:
+        print(f"Ошибка при создании VIEW: {e}")
+        raise
+
+if __name__ == "__main__":
+    transform()
+    check_csv_files()
+    engine = load()
+    create_dashboard_view(engine)

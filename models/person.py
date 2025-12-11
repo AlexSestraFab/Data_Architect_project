@@ -20,9 +20,12 @@ class SatPerson(Base, Sat):
     __tablename__ = "s_person"
     person_hash = Column(String, ForeignKey(HubPerson.person_hash), primary_key=True, nullable=False)
 
+    name = Column(String)
+    gender = Column(String)
     married = Column(String)
     children = Column(Integer)
     position = Column(String) # это словарь НАДО ПРОВЕРИТЬ!!
+    state_agency_short = Column(String)
 
     valid_from = Column(DateTime)
     valid_to = Column(DateTime)

@@ -69,7 +69,7 @@ def prepare_position_dictionary(data, source='declarations'): # изменени
 def prepare_agency_dictionary(data, source='declarations'): # изменения 2 (весь блок define position_id)
     agency_data = data[['state_agency', 'state_agency_short', 'state_agency_full']].copy()
     agency_data = agency_data.drop_duplicates()
-    agency_data['agency_id'] = agency_data[['state_agency', 'state_agency_short', 'state_agency_full']].astype(str).agg('|'.join, axis=1)
+    agency_data['agency_id'] = agency_data[['state_agency_short', 'state_agency', 'state_agency_full']].astype(str).agg('|'.join, axis=1)
     agency_data.to_csv('stage/dictionaries/d_agency.csv', index=False)
     return agency_data
 
