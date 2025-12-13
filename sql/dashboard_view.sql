@@ -18,12 +18,13 @@ SELECT
 
     COALESCE(SUM(
         CASE  
-            WHEN own.meters ~ '^[0-9\.]+$' 
+            WHEN own.meters IS NOT NULL
+            AND own.meters ~ '^[0-9\.]+$' 
             THEN CAST(own.meters AS NUMERIC)
             ELSE 0
         END), 0) as total_own_m2,
 
-    COUNT(DISTINCT own.asset_hash) as own_properties_count,
+    COUNT(own.asset_hash) as own_properties_count,
 
     COUNT(DISTINCT CASE 
             WHEN own.country IS NOT NULL
@@ -34,7 +35,8 @@ SELECT
 
     COALESCE(SUM(
         CASE 
-            WHEN use.use_meters ~ '^[0-9\.]+$'
+            WHEN use.use_meters IS NOT NULL
+            AND use.use_meters ~ '^[0-9\.]+$'
             THEN CAST(use.use_meters AS NUMERIC)
             ELSE 0
         END), 0) as total_use_m2,
@@ -54,17 +56,17 @@ SELECT
 
 FROM h_declaration d
 
-JOIN l_person_declaration lpd ON d.declaration_hash = lpd.declaration_hash 
-JOIN h_person p ON lpd.person_hash = p.person_hash
+INNER JOIN l_person_declaration lpd ON d.declaration_hash = lpd.declaration_hash 
+INNER JOIN h_person p ON lpd.person_hash = p.person_hash
 
-JOIN s_declaration sd ON d.declaration_hash = sd.declaration_hash
+INNER JOIN s_declaration sd ON d.declaration_hash = sd.declaration_hash
     AND sd.load_date = (
         SELECT MAX(load_date)
         FROM s_declaration sd2
         WHERE sd2.declaration_hash = d.declaration_hash
     )
 
-JOIN s_person sp ON p.person_hash = sp.person_hash 
+INNER JOIN s_person sp ON p.person_hash = sp.person_hash 
     AND sp.load_date = (
         SELECT MAX(load_date) 
         FROM s_person sp2 

@@ -1,0 +1,13 @@
+CREATE INDEX IF NOT EXISTS idx_h_dec_hash ON h_declaration(declaration_hash);
+CREATE INDEX IF NOT EXISTS idx_h_per_hash ON h_person(person_hash);
+CREATE INDEX IF NOT EXISTS idx_lpd_dec_hash ON l_person_declaration(declaration_hash);
+CREATE INDEX IF NOT EXISTS idx_lpd_per_hash ON l_person_declaration(person_hash);
+CREATE INDEX IF NOT EXISTS idx_sd_dec_hash ON s_declaration(declaration_hash);
+CREATE INDEX IF NOT EXISTS idx_sd_dec_hash_load ON s_declaration(declaration_hash, load_date);
+CREATE INDEX IF NOT EXISTS idx_sp_per_hash ON s_person(person_hash);
+CREATE INDEX IF NOT EXISTS idx_sp_per_hash_load ON s_person(person_hash, load_date);
+CREATE INDEX IF NOT EXISTS idx_lda_dec_hash ON l_declaration_asset(declaration_hash);
+CREATE INDEX IF NOT EXISTS idx_ha_asset_hash ON h_asset(asset_hash);
+CREATE INDEX IF NOT EXISTS idx_own_asset_hash ON s_asset_own_realty(asset_hash, load_date);
+CREATE INDEX IF NOT EXISTS idx_use_asset_hash ON s_asset_use_realty(asset_hash, load_date);
+CREATE INDEX IF NOT EXISTS idx_car_asset_hash ON s_asset_car(asset_hash, load_date);

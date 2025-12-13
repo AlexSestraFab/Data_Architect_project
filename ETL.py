@@ -50,6 +50,7 @@ def transform():
     Path("stage/sats").mkdir(parents=True, exist_ok=True)
     Path("stage/dict").mkdir(parents=True, exist_ok=True)
     Path("sql").mkdir(parents=True, exist_ok=True)
+    Path("scripts").mkdir(parents=True, exist_ok=True)
     print("Структура папок создана!")
 
     df = pd.read_csv('df_all.csv')
@@ -118,12 +119,10 @@ def check_csv_files():
     print("="*50)
 
 def load():
-    #engine = create_engine("postgresql://postgres:postgres@localhost:5432/declaration_db")
+    engine = create_engine("postgresql://postgres:postgres@postgres:5432/declaration_db")
 
     print("Загрузка в PostgreSQL")
     print("\n" + "="*50)
-
-    print("Загрузка в PostgreSQL")
 
     hub_path = "stage/hubs/"
     for filename in os.listdir(hub_path):
@@ -146,27 +145,31 @@ def load():
         df.to_sql(table, con=engine, if_exists='replace', index=False)
         print(f" Загружен сателлит: {table} ({len(df)} записей)")
 
-        print("\n Все данные загружены в PostgreSQL")
-        print("="*50)
-        return engine
+    print("\n Все данные загружены в PostgreSQL")
+    print("="*50)
+    return engine
 
 def create_dashboard_view(engine):
     try:
         with open('sql/dashboard_view.sql', 'r', encoding='utf-8') as f:  # чтение SQL-скрипта из файла
             sql_script = f.read()
 
+        with open('sql/indexes.sql', 'r', encoding='utf-8') as f:
+            indexes_sql = f.read()
+
         with engine.connect() as conn: # создание соединения через sqlalchemy
             from sqlalchemy import text
 
             conn.execute(text("DROP VIEW IF EXISTS dm_dashboard_main CASCADE"))
             conn.execute(text(sql_script))
+            conn.execute(text(indexes_sql))
             conn.commit()
 
             print(f"VIEW dm_dashboard_main успешно создан")
 
-            result = conn.execute(text("SELECT COUNT(*) FROM dm_dashboard_main"))
-            count = result.fetchone()[0]
-            print(f"В VIEW содержится {count} записей")
+            #result = conn.execute(text("SELECT COUNT(*) FROM dm_dashboard_main"))
+            #count = result.fetchone()[0]
+            #print(f"В VIEW содержится {count} записей")
 
     except Exception as e:
         print(f"Ошибка при создании VIEW: {e}")

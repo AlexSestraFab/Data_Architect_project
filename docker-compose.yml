@@ -1,7 +1,5 @@
-version: '3.8'
 
 services:
-
   postgres:
     image: postgres:15
     container_name: dv-postgres
@@ -9,21 +7,38 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: declaration_db
-      LANG: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
   etl:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.etl
     container_name: dv-etl
+    depends_on:
+      - postgres
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/declaration_db
       PYTHONUTF8: "1"
+    volumes:
+      - .:/app
+    command: python ETL.py
 
-volumes:
-  postgres_data:
+  exporter:
+    build:
+      context: .
+      dockerfile: Dockerfile.exporter
+    container_name: dv_exporter
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/declaration_db
+      CLICKHOUSE_HOST: 'rc1b-dghi9mds291db82e.mdb.yandexcloud.net'
+      CLICKHOUSE_PORT: 8443
+      CLICKHOUSE_USER: 'admin'
+      CLICKHOUSE_PASSWORD: '21041984'
+      CLICKHOUSE_SECURE: 'true'
+      PYTHONUTF8: "1"
+    volumes:
+      - .:/app
+    command: python export_to_clickhouse.py
